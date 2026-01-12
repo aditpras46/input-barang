@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Master - Ultra Minimalist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+        }
+        .fade-in {
+            animation: fadeIn 0.2s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Custom scrollbar ultra minimalis */
+        .suggestion-box::-webkit-scrollbar,
+        .modal-content::-webkit-scrollbar,
+        textarea::-webkit-scrollbar {
+            width: 3px;
+        }
+        .suggestion-box::-webkit-scrollbar-track,
+        .modal-content::-webkit-scrollbar-track,
+        textarea::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .suggestion-box::-webkit-scrollbar-thumb,
+        .modal-content::-webkit-scrollbar-thumb,
+        textarea::-webkit-scrollbar-thumb {
+            background: #000000;
+        }
+        input::placeholder, textarea::placeholder {
+            color: #d1d5db;
+        }
+        /* Hide number input spinners */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        /* Loading Spinner */
+        .loader {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #000;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 flex flex-col min-h-screen">
+
+    <div class="w-full max-w-md mx-auto flex-grow flex flex-col justify-center">
+        <!-- Header Kecil -->
+        <header class="mb-8 border-b border-black pb-2 flex justify-between items-end">
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 id="pageTitle" class="text-lg font-black tracking-tighter uppercase">Penjualan</h1>
+                    <!-- TOMBOL NOTE (Toggle Switch) -->
+                    <!-- Changed hover style to light gray to differentiate from active state -->
+                    <button id="noteToggleBtn" type="button" class="text-[9px] font-bold uppercase border border-black px-2 py-0.5 hover:bg-gray-200 transition-colors" title="Tandai sebagai Note">
+                        + Note
+                    </button>
+                </div>
+                <p id="connectionStatus" class="text-[9px] text-gray-400 uppercase tracking-widest">Cloud System</p>
+            </div>
+            <div class="flex gap-2 mb-1">
+                <!-- Tombol Pengaturan -->
+                <button id="settingsBtn" class="text-[9px] font-bold uppercase border border-black px-2 py-0.5 hover:bg-black hover:text-white transition-colors flex items-center justify-center" title="Pengaturan URL">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                </button>
+                <button id="openListBtn" class="text-[9px] font-bold uppercase border border-black px-2 py-0.5 hover:bg-black hover:text-white transition-colors flex items-center gap-2">
+                    Data (<span id="countBadge">-</span>)
+                </button>
+            </div>
+        </header>
+
+        <!-- Form Section - Centered & Focused -->
+        <div>
+            <form id="dataForm" class="space-y-4" autocomplete="off">
+                <div class="relative">
+                    <label class="block text-[9px] font-black uppercase mb-0.5 text-gray-400">Pembeli</label>
+                    <input type="text" id="userName" required 
+                        class="w-full px-0 py-1 text-lg font-bold border-b-2 border-gray-100 focus:border-black outline-none transition-colors bg-transparent placeholder-gray-200"
+                        placeholder="Nama...">
+                    <div id="userSuggestionBox" class="suggestion-box hidden absolute z-40 w-full mt-0.5 bg-white border border-black max-h-[160px] overflow-y-auto text-sm shadow-xl"></div>
+                </div>
+                
+                <!-- INPUT PENJUALAN -->
+                <div id="salesInputs">
+                    <!-- Group Barang & Variant -->
+                    <div class="flex gap-4">
+                        <div class="relative flex-grow w-[70%]">
+                            <label class="block text-[9px] font-black uppercase mb-0.5 text-gray-400">Barang</label>
+                            <input type="text" id="itemName" required
+                                class="w-full px-0 py-1 text-lg font-bold border-b-2 border-gray-100 focus:border-black outline-none transition-colors bg-transparent placeholder-gray-200"
+                                placeholder="Produk...">
+                            <div id="itemSuggestionBox" class="suggestion-box hidden absolute z-40 w-full mt-0.5 bg-white border border-black max-h-[160px] overflow-y-auto text-sm shadow-xl"></div>
+                        </div>
+
+                        <div class="relative w-[30%]">
+                            <label class="block text-[9px] font-black uppercase mb-0.5 text-gray-400">Warna/Size</label>
+                            <input type="text" id="itemVariant" 
+                                class="w-full px-0 py-1 text-lg font-bold border-b-2 border-gray-100 focus:border-black outline-none transition-colors bg-transparent placeholder-gray-200"
+                                placeholder="XL">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6 mt-4">
+                        <div>
+                            <label class="block text-[9px] font-black uppercase mb-0.5 text-gray-400">Qty</label>
+                            <input type="number" id="itemQty" min="0"
+                                class="w-full px-0 py-1 text-lg font-bold border-b-2 border-gray-100 focus:border-black outline-none bg-transparent placeholder-gray-200"
+                                placeholder="1">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-black uppercase mb-0.5 text-gray-400">Harga</label>
+                            <input type="number" id="itemPrice" required min="0"
+                                class="w-full px-0 py-1 text-lg font-bold border-b-2 border-gray-100 focus:border-black outline-none bg-transparent placeholder-gray-200"
+                                placeholder="0">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" 
+                    class="w-full bg-black text-white text-[10px] font-bold uppercase py-3 hover:bg-gray-800 transition-transform active:scale-95 tracking-[0.2em] mt-6 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                    Simpan ke Cloud
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Popup List -->
+    <div id="dataModal" class="fixed inset-0 z-50 hidden">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-white/95 backdrop-blur-sm" id="modalBackdrop"></div>
+        
+        <!-- Modal Content -->
+        <div class="absolute inset-0 flex flex-col p-4 md:p-8 max-w-4xl mx-auto h-full fade-in">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center mb-4 pb-2 border-b border-black">
+                <div>
+                    <h2 class="text-lg font-black uppercase tracking-tighter">Spreadsheet Data</h2>
+                    <p class="text-[9px] text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                        Live Sync
+                        <span id="refreshIndicator" class="hidden w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                    </p>
+                </div>
+                <div class="flex gap-4 items-center">
+                    <button id="refreshBtn" class="text-[9px] font-bold uppercase hover:text-blue-600 flex items-center gap-1">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                        Refresh
+                    </button>
+                    <button id="downloadCSV" class="text-[9px] font-bold uppercase hover:text-gray-500">CSV</button>
+                    <button id="closeModalBtn" class="ml-4 w-6 h-6 flex items-center justify-center bg-black text-white rounded-full hover:bg-gray-800">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scrollable Table Area -->
+            <div class="flex-grow overflow-auto modal-content pr-2 relative">
+                <!-- Loading Overlay -->
+                <div id="loadingOverlay" class="absolute inset-0 bg-white/80 z-20 flex flex-col items-center justify-center hidden">
+                    <div class="loader mb-2"></div>
+                    <p class="text-[9px] font-bold uppercase tracking-widest">Mengambil Data...</p>
+                </div>
+
+                <table class="w-full text-left border-collapse table-fixed">
+                    <thead class="sticky top-0 bg-white z-10">
+                        <tr class="border-b border-black text-[9px] uppercase font-black tracking-widest">
+                            <th class="py-2 pr-2 w-[25%] bg-white">Pembeli</th>
+                            <th class="py-2 pr-2 w-[35%] bg-white">Barang / Ket</th>
+                            <th class="py-2 pr-2 text-center w-[10%] bg-white">Qty</th>
+                            <th class="py-2 pr-2 text-right w-[15%] bg-white">Harga</th>
+                            <th class="py-2 pr-2 text-right w-[15%] bg-white">Total</th>
+                            <th class="py-2 text-right w-[5%] bg-white"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody" class="text-[10px] font-medium"></tbody>
+                </table>
+                
+                <div id="emptyState" class="py-20 text-center hidden">
+                    <p class="text-[9px] text-gray-300 uppercase tracking-widest font-bold">Data Kosong / Belum Load</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Settings -->
+    <div id="settingsModal" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-white/95 backdrop-blur-sm" id="settingsBackdrop"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm p-6 bg-white border border-black shadow-2xl fade-in">
+            <div class="flex justify-between items-center mb-6 border-b border-black pb-2">
+                <h2 class="text-lg font-black uppercase tracking-tighter">Konfigurasi</h2>
+                <button id="closeSettingsBtn" class="w-6 h-6 flex items-center justify-center bg-black text-white rounded-full hover:bg-gray-800">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[9px] font-black uppercase mb-1 text-gray-400">Google Script URL (Utama)</label>
+                    <input type="text" id="configScriptUrl" 
+                        class="w-full px-2 py-1.5 text-xs font-mono border border-gray-200 focus:border-black outline-none transition-colors"
+                        placeholder="https://script.google.com/macros/s/...">
+                    <p class="text-[8px] text-gray-400 mt-1">URL Web App dari Google Apps Script (Exec).</p>
+                </div>
+                
+                <div>
+                    <label class="block text-[9px] font-black uppercase mb-1 text-gray-400">CSV URL (Backup)</label>
+                    <input type="text" id="configCsvUrl" 
+                        class="w-full px-2 py-1.5 text-xs font-mono border border-gray-200 focus:border-black outline-none transition-colors"
+                        placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv">
+                     <p class="text-[8px] text-gray-400 mt-1">Publish to Web > CSV Link.</p>
+                </div>
+
+                <div class="pt-4 flex gap-3">
+                    <button id="saveSettingsBtn" class="flex-grow bg-black text-white text-[10px] font-bold uppercase py-2 hover:bg-gray-800 transition-transform active:scale-95 tracking-widest">
+                        Simpan & Reload
+                    </button>
+                    <button id="resetSettingsBtn" class="px-3 border border-red-200 text-red-500 text-[10px] font-bold uppercase py-2 hover:bg-red-50 hover:border-red-500 hover:text-red-600 transition-colors" title="Reset ke Default">
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Minimalis -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-black text-white px-5 py-2 text-[9px] font-bold uppercase tracking-widest opacity-0 pointer-events-none transition-opacity duration-300 shadow-xl z-[70] w-max max-w-[90%] text-center">
+        <span id="toastMsg">Saved</span>
+    </div>
+
+    <script>
+        // ==========================================
+        // KONFIGURASI DEFAULT (Fallback jika LocalStorage kosong)
+        const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwoAG128uLYLuWRK-Lr0dOSHGY18AIwU4wtQEw8Tt3AHnlNwGBpHHogEIHeUgrZGTCSQg/exec'; 
+        const DEFAULT_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSrkuptW1fDV77qah95TTP_DvmoULn6Mq59ZbK_T_K_WLmPAlYKmwP0RbZ3l122r9xdDjr_Rr71X3tb/pub?output=csv';
+        
+        // LOAD DARI LOCAL STORAGE ATAU GUNAKAN DEFAULT
+        let GOOGLE_SCRIPT_URL = localStorage.getItem('inventoryScriptUrl') || DEFAULT_SCRIPT_URL;
+        let GOOGLE_SHEET_CSV_URL = localStorage.getItem('inventoryCsvUrl') || DEFAULT_CSV_URL;
+        // ==========================================
+
+        // Local Storage Data
+        let savedNames = JSON.parse(localStorage.getItem('inventorySavedNames')) || [];
+        let savedProducts = JSON.parse(localStorage.getItem('inventorySavedProducts')) || {};
+        
+        let cloudData = [];
+        let refreshInterval; 
+        let isNoteActive = false;
+
+        // Elements
+        const dataForm = document.getElementById('dataForm');
+        const dataTableBody = document.getElementById('dataTableBody');
+        const emptyState = document.getElementById('emptyState');
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toastMsg');
+        const downloadBtn = document.getElementById('downloadCSV');
+        const countBadge = document.getElementById('countBadge');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const refreshIndicator = document.getElementById('refreshIndicator');
+        const noteToggleBtn = document.getElementById('noteToggleBtn');
+
+        // Modal Elements (Data)
+        const dataModal = document.getElementById('dataModal');
+        const openListBtn = document.getElementById('openListBtn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const modalBackdrop = document.getElementById('modalBackdrop');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        // Modal Elements (Settings)
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const settingsBackdrop = document.getElementById('settingsBackdrop');
+        const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        const resetSettingsBtn = document.getElementById('resetSettingsBtn');
+        const configScriptUrl = document.getElementById('configScriptUrl');
+        const configCsvUrl = document.getElementById('configCsvUrl');
+        
+        // Inputs
+        const nameInput = document.getElementById('userName');
+        const userSuggestionBox = document.getElementById('userSuggestionBox');
+        const itemInput = document.getElementById('itemName');
+        const itemVariantInput = document.getElementById('itemVariant');
+        const itemQtyInput = document.getElementById('itemQty');
+        const itemPriceInput = document.getElementById('itemPrice');
+        const itemSuggestionBox = document.getElementById('itemSuggestionBox');
+
+        // Initialize
+        checkConnection();
+
+        function checkConnection() {
+            const hasScript = GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL.startsWith('https://script.google.com');
+            
+            if (hasScript) {
+                connectionStatus.innerText = "Realtime Cloud (Ready)";
+                connectionStatus.className = "text-[9px] uppercase tracking-widest text-green-600 font-bold";
+            } else {
+                connectionStatus.innerText = "Script URL Missing/Invalid";
+                connectionStatus.className = "text-[9px] uppercase tracking-widest text-red-500 font-bold";
+            }
+        }
+
+        // --- TOGGLE NOTE LOGIC (UPDATED) ---
+        noteToggleBtn.addEventListener('click', () => {
+            isNoteActive = !isNoteActive;
+            updateNoteButtonState();
+        });
+
+        function updateNoteButtonState() {
+            if (isNoteActive) {
+                // ACTIVE STATE: Black Background, White Text
+                // We also change hover to Dark Gray so it looks different from "Active"
+                noteToggleBtn.classList.remove('hover:bg-gray-200');
+                noteToggleBtn.classList.add('bg-black', 'text-white', 'hover:bg-gray-800');
+            } else {
+                // INACTIVE STATE: Transparent/White Background, Black Text
+                // Hover is Light Gray (gray-200) so user sees a difference when clicking off
+                noteToggleBtn.classList.remove('bg-black', 'text-white', 'hover:bg-gray-800');
+                noteToggleBtn.classList.add('hover:bg-gray-200');
+            }
+        }
+
+        // --- SETTINGS LOGIC ---
+        function openSettings() {
+            configScriptUrl.value = GOOGLE_SCRIPT_URL;
+            configCsvUrl.value = GOOGLE_SHEET_CSV_URL;
+            settingsModal.classList.remove('hidden');
+        }
+
+        function closeSettings() {
+            settingsModal.classList.add('hidden');
+        }
+
+        function saveSettings() {
+            const newScript = configScriptUrl.value.trim();
+            const newCsv = configCsvUrl.value.trim();
+
+            localStorage.setItem('inventoryScriptUrl', newScript);
+            localStorage.setItem('inventoryCsvUrl', newCsv);
+            
+            GOOGLE_SCRIPT_URL = newScript;
+            GOOGLE_SHEET_CSV_URL = newCsv;
+
+            checkConnection();
+            showToast("Konfigurasi Disimpan");
+            closeSettings();
+        }
+
+        function resetSettings() {
+            if(confirm("Kembalikan ke URL Default bawaan aplikasi?")) {
+                configScriptUrl.value = DEFAULT_SCRIPT_URL;
+                configCsvUrl.value = DEFAULT_CSV_URL;
+            }
+        }
+
+        settingsBtn.addEventListener('click', openSettings);
+        closeSettingsBtn.addEventListener('click', closeSettings);
+        settingsBackdrop.addEventListener('click', closeSettings);
+        saveSettingsBtn.addEventListener('click', saveSettings);
+        resetSettingsBtn.addEventListener('click', resetSettings);
+
+
+        // --- HELPER: Flexible Key Finder ---
+        function getFlexValue(item, possibleKeys) {
+            const itemKeys = Object.keys(item).map(k => k.toLowerCase());
+            for (let key of possibleKeys) {
+                if (item[key]) return item[key];
+                const foundKey = itemKeys.find(k => k.includes(key));
+                if (foundKey) return item[foundKey];
+            }
+            return null;
+        }
+
+        // --- CSV PARSER ---
+        function csvToJSON(csv) {
+            const lines = csv.split("\n");
+            const result = [];
+            const headers = lines[0].split(",").map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i] || lines[i].trim() === "") continue;
+
+                const rowData = [];
+                let inQuote = false;
+                let currentVal = '';
+                
+                for(let char of lines[i]) {
+                    if(char === '"') { inQuote = !inQuote; continue; }
+                    if(char === ',' && !inQuote) {
+                        rowData.push(currentVal);
+                        currentVal = '';
+                    } else {
+                        currentVal += char;
+                    }
+                }
+                rowData.push(currentVal);
+
+                const obj = {};
+                for (let j = 0; j < headers.length; j++) {
+                    obj[headers[j]] = rowData[j] ? rowData[j].replace(/\r/g, '').trim() : '';
+                }
+                result.push(obj);
+            }
+            return result;
+        }
+
+        // --- FETCH DATA FROM CLOUD (READ) ---
+        function loadDataFromCloud(isAutoRefresh = false) {
+            if (isAutoRefresh) refreshIndicator.classList.remove('hidden');
+
+            if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL.startsWith('http')) {
+                if (!isAutoRefresh) {
+                    loadingOverlay.classList.remove('hidden');
+                    dataTableBody.innerHTML = ''; 
+                }
+                
+                const antiCacheURL = GOOGLE_SCRIPT_URL + (GOOGLE_SCRIPT_URL.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+
+                fetch(antiCacheURL)
+                    .then(res => res.json())
+                    .then(data => {
+                        cloudData = data;
+                        renderCloudTable(cloudData);
+                    })
+                    .catch(error => {
+                        console.warn("Script fetch failed, trying CSV...", error);
+                        if (GOOGLE_SHEET_CSV_URL && GOOGLE_SHEET_CSV_URL.startsWith('http')) {
+                            loadDataFromCSV(isAutoRefresh);
+                        } else if (!isAutoRefresh) {
+                            handleFetchError(error);
+                        }
+                    })
+                    .finally(() => {
+                        loadingOverlay.classList.add('hidden');
+                        refreshIndicator.classList.add('hidden');
+                    });
+                return;
+            }
+
+            if (GOOGLE_SHEET_CSV_URL && GOOGLE_SHEET_CSV_URL.startsWith('http')) {
+                loadDataFromCSV(isAutoRefresh);
+            } else {
+                if (!isAutoRefresh) {
+                    loadingOverlay.classList.add('hidden');
+                    // Jangan alert, cukup tampilkan status di header
+                }
+                refreshIndicator.classList.add('hidden');
+            }
+        }
+
+        function loadDataFromCSV(isAutoRefresh) {
+            if (!isAutoRefresh) {
+                loadingOverlay.classList.remove('hidden');
+                dataTableBody.innerHTML = ''; 
+            }
+            const antiCacheURL = GOOGLE_SHEET_CSV_URL + (GOOGLE_SHEET_CSV_URL.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+
+            fetch(antiCacheURL)
+                .then(response => {
+                    if (!response.ok) throw new Error("Gagal mengambil CSV.");
+                    return response.text();
+                })
+                .then(csvText => {
+                    try {
+                        const data = csvToJSON(csvText);
+                        cloudData = data;
+                        renderCloudTable(cloudData);
+                    } catch (e) {
+                        if (!isAutoRefresh) throw new Error("Gagal Parse CSV.");
+                    }
+                })
+                .catch(error => {
+                    if (!isAutoRefresh) handleFetchError(error);
+                })
+                .finally(() => {
+                    loadingOverlay.classList.add('hidden');
+                    refreshIndicator.classList.add('hidden');
+                });
+        }
+
+        function handleFetchError(error) {
+            console.error('Error fetching data:', error);
+            dataTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-red-600 text-xs p-4 leading-relaxed bg-red-50 border border-red-100 rounded-lg m-4">
+                <p class="font-bold text-sm mb-2">Gagal Menampilkan Data</p>
+                <div class="mt-3 font-mono text-[10px] text-gray-500 bg-white p-2 border rounded">
+                    Error: ${error.message}<br>Periksa URL di Pengaturan.
+                </div>
+            </td></tr>`;
+        }
+
+        function renderCloudTable(data) {
+            dataTableBody.innerHTML = '';
+            
+            if (!Array.isArray(data) || data.length === 0) {
+                emptyState.classList.remove('hidden');
+                countBadge.innerText = "0";
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            
+            const reversedData = [...data].reverse();
+            let validRows = 0;
+
+            reversedData.forEach(item => {
+                const nama = getFlexValue(item, ['nama', 'name', 'pembeli']) || '';
+                const barang = getFlexValue(item, ['barang', 'item', 'produk']) || '';
+                const keterangan = getFlexValue(item, ['keterangan', 'note', 'catatan']) || ''; 
+                
+                if (!nama && !barang && !keterangan) return;
+
+                validRows++;
+                const qty = getFlexValue(item, ['qty', 'jumlah']) || 0;
+                const harga = getFlexValue(item, ['harga', 'price']) || 0;
+                const total = getFlexValue(item, ['total']) || 0;
+                const id = getFlexValue(item, ['id', 'uuid', 'uid']) || ''; 
+
+                let displayBarang = barang;
+                if (keterangan) {
+                    if (barang) {
+                        displayBarang += `<div class="text-[9px] text-gray-400 italic mt-0.5 border-l border-gray-300 pl-1">${keterangan}</div>`;
+                    } else {
+                        displayBarang = `<span class="italic text-gray-500">Note: ${keterangan}</span>`;
+                    }
+                }
+
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-100 hover:bg-gray-50 group transition-colors';
+                row.innerHTML = `
+                    <td class="py-1.5 pr-2 font-bold uppercase truncate" title="${nama}">${nama}</td>
+                    <td class="py-1.5 pr-2 truncate text-gray-600" title="${barang} ${keterangan}">${displayBarang}</td>
+                    <td class="py-1.5 pr-2 text-center text-gray-500">${qty || '-'}</td>
+                    <td class="py-1.5 pr-2 text-right text-gray-500">${formatNumber(harga) || '-'}</td>
+                    <td class="py-1.5 pr-2 text-right font-black">${formatNumber(total) || '-'}</td>
+                    <td class="py-1.5 text-right">
+                        <button onclick="deleteItem('${id}')" class="text-gray-300 hover:text-red-600 transition-colors p-1" title="Hapus">×</button>
+                    </td>
+                `;
+                dataTableBody.appendChild(row);
+            });
+            
+            countBadge.innerText = validRows;
+            if (validRows === 0) emptyState.classList.remove('hidden');
+        }
+
+        // --- Logic Auto Suggestion ---
+        nameInput.addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            if (!val) { userSuggestionBox.classList.add('hidden'); return; }
+            const filtered = savedNames.filter(n => n.toLowerCase().includes(val));
+            if (filtered.length > 0) {
+                renderSuggestions(userSuggestionBox, filtered, (selected) => {
+                    nameInput.value = selected;
+                    userSuggestionBox.classList.add('hidden');
+                });
+                userSuggestionBox.classList.remove('hidden');
+            } else {
+                userSuggestionBox.classList.add('hidden');
+            }
+        });
+
+        itemInput.addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            if (!val) { itemSuggestionBox.classList.add('hidden'); return; }
+            const productNames = Object.keys(savedProducts);
+            const filtered = productNames.filter(n => n.toLowerCase().includes(val));
+            if (filtered.length > 0) {
+                renderSuggestions(itemSuggestionBox, filtered, (selected) => {
+                    itemInput.value = selected;
+                    itemPriceInput.value = savedProducts[selected];
+                    itemSuggestionBox.classList.add('hidden');
+                });
+                itemSuggestionBox.classList.remove('hidden');
+            } else {
+                itemSuggestionBox.classList.add('hidden');
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!nameInput.contains(e.target) && !userSuggestionBox.contains(e.target)) userSuggestionBox.classList.add('hidden');
+            if (!itemInput.contains(e.target) && !itemSuggestionBox.contains(e.target)) itemSuggestionBox.classList.add('hidden');
+        });
+
+        function renderSuggestions(container, list, onSelect) {
+            container.innerHTML = '';
+            list.sort().slice(0, 5).forEach(text => {
+                const div = document.createElement('div');
+                div.className = 'px-4 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-50 last:border-0 font-medium';
+                div.textContent = text;
+                div.onclick = () => onSelect(text);
+                container.appendChild(div);
+            });
+        }
+
+        // --- Form Submit ---
+        dataForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const userName = nameInput.value.trim();
+            const productName = itemInput.value.trim();
+            const variant = itemVariantInput.value.trim();
+            const note = isNoteActive ? "Note" : "";
+            
+            let qty = parseInt(itemQtyInput.value);
+            if (isNaN(qty) || qty <= 0) qty = 1;
+            const price = parseFloat(itemPriceInput.value) || 0;
+            const total = qty * price;
+            
+            const timestamp = new Date().toLocaleString('id-ID');
+            const newId = Date.now();
+            
+            const combinedProduct = variant ? `${productName} ${variant}` : productName;
+
+            // Save Suggestions
+            if (userName && !savedNames.includes(userName)) {
+                savedNames.push(userName);
+                localStorage.setItem('inventorySavedNames', JSON.stringify(savedNames));
+            }
+            if (productName) {
+                savedProducts[productName] = price;
+                localStorage.setItem('inventorySavedProducts', JSON.stringify(savedProducts));
+            }
+
+            // Optimistic UI Update
+            const tempItem = {
+                timestamp: timestamp,
+                nama: userName,
+                barang: combinedProduct,
+                qty: qty,
+                harga: price,
+                total: total,
+                keterangan: note,
+                id: newId
+            };
+
+            cloudData.push(tempItem);
+            renderCloudTable(cloudData);
+
+            // Reset Form & Note Button
+            nameInput.value = '';
+            itemInput.value = '';
+            itemVariantInput.value = '';
+            itemQtyInput.value = '';
+            itemPriceInput.value = '';
+            
+            // Auto Reset Note Button after submit
+            if (isNoteActive) {
+                isNoteActive = false;
+                updateNoteButtonState();
+            }
+
+            nameInput.focus(); 
+            
+            showToast("Tersimpan (Syncing...)");
+
+            if (GOOGLE_SCRIPT_URL) {
+                const formData = new FormData();
+                formData.append('timestamp', timestamp);
+                formData.append('nama', userName);
+                formData.append('barang', combinedProduct);
+                formData.append('qty', qty);
+                formData.append('harga', price);
+                formData.append('total', total);
+                formData.append('id', newId);
+                formData.append('keterangan', note);
+
+                fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: formData, mode: 'no-cors' })
+                    .catch(error => { console.error('Background Sync Error:', error); });
+            } else {
+                showToast("URL Script Tidak Valid");
+            }
+        });
+
+        // --- Modal Logic ---
+        function openModal() {
+            dataModal.classList.remove('hidden');
+            loadDataFromCloud();
+            if (refreshInterval) clearInterval(refreshInterval);
+            refreshInterval = setInterval(() => { loadDataFromCloud(true); }, 1000); 
+        }
+
+        function closeModal() {
+            dataModal.classList.add('hidden');
+            if (refreshInterval) clearInterval(refreshInterval);
+        }
+
+        openListBtn.addEventListener('click', openModal);
+        refreshBtn.addEventListener('click', () => loadDataFromCloud(false)); 
+        closeModalBtn.addEventListener('click', closeModal);
+        modalBackdrop.addEventListener('click', closeModal);
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if(!dataModal.classList.contains('hidden')) closeModal();
+                if(!settingsModal.classList.contains('hidden')) closeSettings();
+            }
+        });
+
+        // --- Export CSV ---
+        downloadBtn.addEventListener('click', () => {
+            if (cloudData.length === 0) { alert("Data kosong."); return; }
+            let csvContent = "Timestamp,Nama,Barang,Qty,Harga,Total,Keterangan\n";
+            cloudData.forEach(item => {
+                const nama = getFlexValue(item, ['nama', 'pembeli']) || '';
+                const barang = getFlexValue(item, ['barang', 'produk']) || '';
+                const ket = getFlexValue(item, ['keterangan', 'note']) || '';
+                
+                if (!nama && !barang && !ket) return; 
+
+                const qty = getFlexValue(item, ['qty', 'jumlah']) || 0;
+                const harga = getFlexValue(item, ['harga', 'price']) || 0;
+                const total = getFlexValue(item, ['total']) || 0;
+                const ts = getFlexValue(item, ['timestamp', 'waktu']) || '';
+                csvContent += `${ts},${nama.replace(/,/g, '')},${barang.replace(/,/g, '')},${qty},${harga},${total},${ket.replace(/,/g, '')}\n`;
+            });
+            const link = document.createElement("a");
+            link.setAttribute("href", URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })));
+            link.setAttribute("download", `penjualan_cloud_${new Date().toISOString().slice(0,10)}.csv`);
+            link.click();
+        });
+
+        // Hapus Data
+        window.deleteItem = function(id) {
+            if (!id) return;
+            if(!GOOGLE_SCRIPT_URL) { alert("Butuh Script URL!"); return; }
+
+            if(confirm('Hapus permanent?')) {
+                const rows = dataTableBody.querySelectorAll('tr');
+                rows.forEach(row => { if (row.innerHTML.includes(id)) row.style.opacity = '0.3'; });
+
+                const formData = new FormData();
+                formData.append('action', 'delete');
+                formData.append('id', id);
+                
+                fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: formData, mode: 'no-cors' })
+                    .then(() => {
+                        showToast("Hapus Terkirim");
+                        setTimeout(() => loadDataFromCloud(true), 2000);
+                    })
+                    .catch(() => showToast("Gagal Hapus"));
+            }
+        }
+
+        function formatNumber(number) { return new Intl.NumberFormat('id-ID').format(number); }
+        function showToast(message) {
+            toastMsg.innerText = message;
+            toast.style.opacity = '1';
+            setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+        }
+    </script>
+</body>
+</html>

@@ -82,7 +82,7 @@
             <div class="flex gap-2 mb-1">
                 <!-- Tombol Pengaturan -->
                 <button id="settingsBtn" class="text-[9px] font-bold uppercase border border-black px-2 py-0.5 hover:bg-black hover:text-white transition-colors flex items-center justify-center" title="Pengaturan URL">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                 </button>
                 <button id="openListBtn" class="text-[9px] font-bold uppercase border border-black px-2 py-0.5 hover:bg-black hover:text-white transition-colors flex items-center gap-2">
                     Data (<span id="countBadge">-</span>)
@@ -598,15 +598,49 @@
             }
         });
 
+        // UPDATED: Item Suggestion from Local + Cloud with Auto-Price
         itemInput.addEventListener('input', (e) => {
             const val = e.target.value.toLowerCase();
             if (!val) { itemSuggestionBox.classList.add('hidden'); return; }
-            const productNames = Object.keys(savedProducts);
-            const filtered = productNames.filter(n => n.toLowerCase().includes(val));
+            
+            // Map: Nama Produk -> Harga Terakhir
+            const productMap = new Map();
+
+            // 1. Sumber: Local Storage (savedProducts)
+            if (savedProducts) {
+                Object.keys(savedProducts).forEach(key => {
+                    productMap.set(key, savedProducts[key]);
+                });
+            }
+
+            // 2. Sumber: Cloud Data (Spreadsheet)
+            if (Array.isArray(cloudData)) {
+                cloudData.forEach(item => {
+                    const pName = getFlexValue(item, ['barang', 'item', 'produk']);
+                    const pPrice = getFlexValue(item, ['harga', 'price']);
+                    
+                    // Hanya masukkan jika nama ada
+                    if (pName && typeof pName === 'string') {
+                        // Konversi harga ke angka
+                        const priceNum = parseFloat(pPrice) || 0;
+                        // Simpan/Update ke Map (Data cloud terakhir akan menimpa/melengkapi)
+                        productMap.set(pName, priceNum);
+                    }
+                });
+            }
+
+            // 3. Filter & Render
+            const allProductNames = Array.from(productMap.keys());
+            const filtered = allProductNames.filter(n => n.toLowerCase().includes(val));
+
             if (filtered.length > 0) {
                 renderSuggestions(itemSuggestionBox, filtered, (selected) => {
                     itemInput.value = selected;
-                    itemPriceInput.value = savedProducts[selected];
+                    // AUTO FILL HARGA dari Map
+                    const autoPrice = productMap.get(selected);
+                    if (autoPrice !== undefined) {
+                        itemPriceInput.value = autoPrice;
+                    }
                     itemSuggestionBox.classList.add('hidden');
                 });
                 itemSuggestionBox.classList.remove('hidden');

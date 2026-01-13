@@ -716,11 +716,8 @@
             itemQtyInput.value = '';
             itemPriceInput.value = '';
             
-            // Auto Reset Note Button after submit
-            if (isNoteActive) {
-                isNoteActive = false;
-                updateNoteButtonState();
-            }
+            // Auto Reset Note Button after submit (REMOVED)
+            // Note status sekarang tetap aktif jika user tidak mematikannya secara manual
 
             nameInput.focus(); 
             

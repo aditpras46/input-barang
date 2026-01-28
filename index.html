@@ -83,7 +83,7 @@
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                 </button>
                 <button id="openListBtn" class="text-[9px] font-bold uppercase border border-black px-2 py-0.5 hover:bg-black hover:text-white transition-colors flex items-center gap-2">
-                    Data (<span id="countBadge">-</span>)
+                    Data (<span id="countBadge">0</span>)
                 </button>
             </div>
         </header>
@@ -186,7 +186,7 @@
                 </table>
                 
                 <div id="emptyState" class="py-20 text-center hidden">
-                    <p class="text-[9px] text-gray-300 uppercase tracking-widest font-bold">Data Kosong / Belum Load</p>
+                    <p class="text-[9px] text-gray-300 uppercase tracking-widest font-bold">Data Kosong</p>
                 </div>
             </div>
         </div>
@@ -232,8 +232,21 @@
         </div>
     </div>
 
+    <!-- Confirm Modal (Replacement for window.confirm) -->
+    <div id="confirmModal" class="fixed inset-0 z-[70] hidden">
+        <div class="absolute inset-0 bg-white/90 backdrop-blur-sm"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-xs p-6 bg-white border border-black shadow-2xl fade-in text-center">
+            <h3 class="text-sm font-black uppercase tracking-tighter mb-4" id="confirmTitle">Konfirmasi</h3>
+            <p class="text-[10px] text-gray-500 mb-6 leading-relaxed" id="confirmMessage">Are you sure?</p>
+            <div class="flex gap-3 justify-center">
+                <button id="confirmCancelBtn" class="px-4 py-2 border border-gray-200 text-[9px] font-bold uppercase hover:bg-gray-100 transition-colors">Batal</button>
+                <button id="confirmYesBtn" class="px-4 py-2 bg-black text-white text-[9px] font-bold uppercase hover:bg-gray-800 transition-colors">Ya, Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Minimalis -->
-    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-black text-white px-5 py-2 text-[9px] font-bold uppercase tracking-widest opacity-0 pointer-events-none transition-opacity duration-300 shadow-xl z-[70] w-max max-w-[90%] text-center">
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-black text-white px-5 py-2 text-[9px] font-bold uppercase tracking-widest opacity-0 pointer-events-none transition-opacity duration-300 shadow-xl z-[80] w-max max-w-[90%] text-center">
         <span id="toastMsg">Saved</span>
     </div>
 
@@ -287,6 +300,13 @@
         const itemPriceInput = document.getElementById('itemPrice');
         const itemSuggestionBox = document.getElementById('itemSuggestionBox');
 
+        // Confirm Modal Elements
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmMessage = document.getElementById('confirmMessage');
+        const confirmYesBtn = document.getElementById('confirmYesBtn');
+        const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+        let confirmCallback = null;
+
         // ==========================================
         // INITIALIZE & AUTO REFRESH LOGIC
         // ==========================================
@@ -312,6 +332,25 @@
                 connectionStatus.className = "text-[9px] uppercase tracking-widest text-red-500 font-bold";
             }
         }
+
+        // --- CUSTOM CONFIRM MODAL ---
+        function showConfirm(message, onYes) {
+            confirmMessage.textContent = message;
+            confirmCallback = onYes;
+            confirmModal.classList.remove('hidden');
+        }
+
+        function closeConfirm() {
+            confirmModal.classList.add('hidden');
+            confirmCallback = null;
+        }
+
+        confirmYesBtn.addEventListener('click', () => {
+            if (confirmCallback) confirmCallback();
+            closeConfirm();
+        });
+
+        confirmCancelBtn.addEventListener('click', closeConfirm);
 
         // --- TOGGLE NOTE LOGIC ---
         noteToggleBtn.addEventListener('click', () => {
@@ -354,10 +393,10 @@
         }
 
         function resetSettings() {
-            if(confirm("Kembalikan ke URL Default bawaan aplikasi?")) {
+            showConfirm("Kembalikan ke URL Default bawaan aplikasi?", () => {
                 configScriptUrl.value = DEFAULT_SCRIPT_URL;
                 configCsvUrl.value = DEFAULT_CSV_URL;
-            }
+            });
         }
 
         settingsBtn.addEventListener('click', openSettings);
@@ -530,7 +569,7 @@
             if (validRows === 0) emptyState.classList.remove('hidden');
         }
 
-        // --- Logic Auto Suggestion ---
+        // --- Logic Auto Suggestion (REVISED FOR PRICE DISPLAY) ---
         nameInput.addEventListener('input', (e) => {
             const val = e.target.value.toLowerCase();
             if (!val) { userSuggestionBox.classList.add('hidden'); return; }
@@ -556,6 +595,7 @@
         itemInput.addEventListener('input', (e) => {
             const val = e.target.value.toLowerCase();
             if (!val) { itemSuggestionBox.classList.add('hidden'); return; }
+            
             const productMap = new Map();
             if (savedProducts) {
                 Object.keys(savedProducts).forEach(key => productMap.set(key, savedProducts[key]));
@@ -570,13 +610,19 @@
                     }
                 });
             }
-            const allProductNames = Array.from(productMap.keys());
-            const filtered = allProductNames.filter(n => n.toLowerCase().includes(val));
+
+            // Create list of objects {name, price} instead of just strings
+            const filtered = [];
+            productMap.forEach((price, name) => {
+                if (name.toLowerCase().includes(val)) {
+                    filtered.push({ name: name, price: price });
+                }
+            });
+
             if (filtered.length > 0) {
-                renderSuggestions(itemSuggestionBox, filtered, (selected) => {
-                    itemInput.value = selected;
-                    const autoPrice = productMap.get(selected);
-                    if (autoPrice !== undefined) itemPriceInput.value = autoPrice;
+                renderSuggestions(itemSuggestionBox, filtered, (selectedName, selectedPrice) => {
+                    itemInput.value = selectedName;
+                    if (selectedPrice !== undefined) itemPriceInput.value = selectedPrice;
                     itemSuggestionBox.classList.add('hidden');
                 });
                 itemSuggestionBox.classList.remove('hidden');
@@ -590,13 +636,39 @@
             if (!itemInput.contains(e.target) && !itemSuggestionBox.contains(e.target)) itemSuggestionBox.classList.add('hidden');
         });
 
+        // Revised Render function to handle both simple strings and objects with prices
         function renderSuggestions(container, list, onSelect) {
             container.innerHTML = '';
-            list.sort().slice(0, 5).forEach(text => {
+            
+            // Check if input is object (product with price) or string (user name)
+            const isObject = list.length > 0 && typeof list[0] === 'object';
+
+            const sortedList = list.sort((a, b) => {
+                const valA = isObject ? a.name : a;
+                const valB = isObject ? b.name : b;
+                
+                // Sort by length first (shortest to longest)
+                if (valA.length !== valB.length) {
+                    return valA.length - valB.length;
+                }
+                // Fallback to alphabetical if lengths are equal
+                return valA.localeCompare(valB);
+            }).slice(0, 5);
+
+            sortedList.forEach(item => {
                 const div = document.createElement('div');
-                div.className = 'px-4 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-50 last:border-0 font-medium';
-                div.textContent = text;
-                div.onclick = () => onSelect(text);
+                div.className = 'px-4 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-50 last:border-0 font-medium flex justify-between items-center';
+                
+                if (isObject) {
+                    // Item: {name, price}
+                    div.innerHTML = `<span>${item.name}</span> <span class="text-[10px] text-gray-400 font-mono tracking-wide bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">Rp ${formatNumber(item.price)}</span>`;
+                    div.onclick = () => onSelect(item.name, item.price);
+                } else {
+                    // Simple String
+                    div.textContent = item;
+                    div.onclick = () => onSelect(item);
+                }
+                
                 container.appendChild(div);
             });
         }
@@ -669,12 +741,13 @@
             if (e.key === 'Escape') {
                 if(!dataModal.classList.contains('hidden')) closeModal();
                 if(!settingsModal.classList.contains('hidden')) closeSettings();
+                if(!confirmModal.classList.contains('hidden')) closeConfirm();
             }
         });
 
         // --- Export CSV ---
         downloadBtn.addEventListener('click', () => {
-            if (cloudData.length === 0) { alert("Data kosong."); return; }
+            if (cloudData.length === 0) { showToast("Data kosong."); return; }
             let csvContent = "Timestamp,Nama,Barang,Qty,Harga,Total,Keterangan\n";
             cloudData.forEach(item => {
                 const nama = getFlexValue(item, ['nama', 'pembeli']) || '';
@@ -696,8 +769,9 @@
         // Hapus Data
         window.deleteItem = function(id) {
             if (!id) return;
-            if(!GOOGLE_SCRIPT_URL) { alert("Butuh Script URL!"); return; }
-            if(confirm('Hapus permanent?')) {
+            if(!GOOGLE_SCRIPT_URL) { showToast("Butuh Script URL!"); return; }
+            
+            showConfirm('Hapus data ini secara permanen?', () => {
                 const rows = dataTableBody.querySelectorAll('tr');
                 rows.forEach(row => { if (row.innerHTML.includes(id)) row.style.opacity = '0.3'; });
                 const formData = new FormData();
@@ -709,7 +783,7 @@
                         setTimeout(() => loadDataFromCloud(true), 2000);
                     })
                     .catch(() => showToast("Gagal Hapus"));
-            }
+            });
         }
 
         function formatNumber(number) { return new Intl.NumberFormat('id-ID').format(number); }

@@ -596,26 +596,38 @@
             const val = e.target.value.toLowerCase();
             if (!val) { itemSuggestionBox.classList.add('hidden'); return; }
             
-            const productMap = new Map();
+            // Menggunakan Map untuk menyimpan kombinasi unik Nama|Harga
+            const uniqueProducts = new Map();
+
+            // 1. Dari Local Storage
             if (savedProducts) {
-                Object.keys(savedProducts).forEach(key => productMap.set(key, savedProducts[key]));
+                Object.keys(savedProducts).forEach(key => {
+                    const price = savedProducts[key];
+                    const uniqueKey = `${key.toLowerCase()}|${price}`;
+                    uniqueProducts.set(uniqueKey, { name: key, price: price });
+                });
             }
+
+            // 2. Dari Cloud Data
             if (Array.isArray(cloudData)) {
                 cloudData.forEach(item => {
                     const pName = getFlexValue(item, ['barang', 'item', 'produk']);
                     const pPrice = getFlexValue(item, ['harga', 'price']);
+                    
                     if (pName && typeof pName === 'string') {
                         const priceNum = parseFloat(pPrice) || 0;
-                        productMap.set(pName, priceNum);
+                        const uniqueKey = `${pName.toLowerCase()}|${priceNum}`;
+                        // Kita override, sehingga duplikat persis akan hilang, tapi nama sama harga beda tetap ada
+                        uniqueProducts.set(uniqueKey, { name: pName, price: priceNum });
                     }
                 });
             }
 
-            // Create list of objects {name, price} instead of just strings
+            // Filter data
             const filtered = [];
-            productMap.forEach((price, name) => {
-                if (name.toLowerCase().includes(val)) {
-                    filtered.push({ name: name, price: price });
+            uniqueProducts.forEach((item) => {
+                if (item.name.toLowerCase().includes(val)) {
+                    filtered.push(item);
                 }
             });
 
